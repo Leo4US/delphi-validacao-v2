@@ -64,3 +64,23 @@ A consolidação gera:
 ## Licença
 
 Creative Commons Attribution–NonCommercial–NoDerivatives 4.0 International (CC BY-NC-ND 4.0).
+## Ética, confidencialidade e LGPD
+
+Este repositório foi concebido exclusivamente para validação metodológica interna de instrumentos de pesquisa.
+
+As respostas coletadas:
+- não têm finalidade diagnóstica individual;
+- não substituem submissões formais a CEP/CONEP;
+- devem ser utilizadas apenas para revisão, reorganização e aprimoramento do questionário.
+
+Os dados de identificação (nome, CPF, e-mail) são coletados unicamente para:
+- controle de participação na rodada Delphi;
+- prevenção de duplicidade de respostas;
+- comunicação interna com os participantes.
+
+É responsabilidade dos pesquisadores garantir:
+- armazenamento seguro dos arquivos de resposta;
+- acesso restrito aos dados brutos;
+- anonimização antes de qualquer análise ou divulgação.
+
+Este protótipo não substitui plataformas institucionais de coleta quando estas forem exigidas.
