@@ -1,0 +1,1 @@
+O arquivo LICENSE do repositório deve permanecer como CC BY-NC-ND 4.0 conforme configurado no GitHub.
