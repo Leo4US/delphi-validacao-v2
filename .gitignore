@@ -1,0 +1,14 @@
+# Respostas e saídas
+outputs/*.csv
+outputs/*.xlsx
+outputs/*.json
+
+# Cache e temporários
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+.venv/
+.env
+.DS_Store
