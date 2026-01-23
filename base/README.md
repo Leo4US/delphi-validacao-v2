@@ -96,11 +96,11 @@ Os arquivos desta pasta representam o **instrumento**, não os dados coletados.
 ## Fluxo resumido
 
 Word (instrumento original)
-↓
+→
 CSV por bloco (base/)
-↓
+→
 Formulário Delphi (app/)
-↓
+→
 Decisões e ajustes
-↓
+→
 Versão final do questionário
