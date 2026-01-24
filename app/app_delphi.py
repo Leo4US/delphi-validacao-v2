@@ -7,8 +7,6 @@ import streamlit as st
 BASE_DIR = "base"
 OUTPUT_DIR = "outputs"
 
-VOTOS = ["Manter", "Ajustar", "Retirar", "Coletivo"]
-
 def listar_blocos():
     if not os.path.isdir(BASE_DIR):
         return []
@@ -50,10 +48,12 @@ def salvar_respostas(registro: dict, respostas: list[dict]) -> str:
     for k, v in registro.items():
         df[k] = v
 
+    # ordena colunas (mais legível e compatível com consolidação)
     col_order = [
         "bloco", "secao", "codigo", "tematica",
         "pergunta", "respostas",
-        "voto", "comentario",
+        "grau_relevancia", "aplicabilidade_nacional", "aceitacao_item",
+        "comentarios_sugestoes",
         "nome", "email", "cpf",
         "consentimento", "timestamp",
     ]
@@ -67,7 +67,7 @@ def main():
     st.set_page_config(page_title="Validação Delphi", layout="wide")
 
     st.title("Validação Delphi (fase piloto)")
-    st.write("Protótipo interno para teste de layout, fluxo de votação e armazenamento das respostas.")
+    st.write("Protótipo interno para teste de layout, fluxo de avaliação e armazenamento das respostas.")
 
     blocos = listar_blocos()
     if not blocos:
@@ -94,9 +94,7 @@ def main():
             value=False
         )
 
-    # =========================
-    # NOVO: Critérios Delphi (como no print)
-    # =========================
+    # Critérios Delphi (termos do print)
     st.info("Instruções claras sobre os critérios de avaliação e prazos de resposta.", icon="ℹ️")
     with st.expander("Critérios de avaliação (Delphi) - clique para abrir/fechar", expanded=False):
         st.markdown("""
@@ -126,12 +124,12 @@ Itens que atingirem o consenso na primeira rodada serão considerados validados 
 
     st.divider()
     st.subheader(f"Itens do {bloco_id}")
-    st.write("Para cada item: primeiro leia o trecho do instrumento; depois registre o voto Delphi e, quando necessário, o comentário.")
+    st.write("Para cada item: primeiro leia o trecho do instrumento; depois avalie conforme os critérios Delphi e registre comentários quando necessário.")
 
     respostas = []
     problemas = []
 
-    for i, row in itens.iterrows():
+    for _, row in itens.iterrows():
         secao = row["secao"]
         codigo = row["codigo"]
         tematica = row["tematica"]
@@ -140,9 +138,7 @@ Itens que atingirem o consenso na primeira rodada serão considerados validados 
 
         st.markdown(f"### {codigo}  |  Seção: {secao}  |  Temática: {tematica}")
 
-        # =========================
-        # NOVO: 2 blocos em “cards”
-        # =========================
+        # 1) Instrumento
         with st.container(border=True):
             st.markdown("**1) Instrumento de pesquisa (pergunta e respostas)**")
             st.markdown(f"**Pergunta:** {pergunta}")
@@ -150,29 +146,43 @@ Itens que atingirem o consenso na primeira rodada serão considerados validados 
                 st.markdown("**Respostas:**")
                 st.write(resp_txt)
 
+        # 2) Avaliação Delphi (critérios do print)
         with st.container(border=True):
-            st.markdown("**2) Avaliação Delphi (decisão e comentário)**")
+            st.markdown("**2) Avaliação Delphi (critérios)**")
 
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                voto = st.radio(
-                    f"Voto (item {codigo})",
-                    VOTOS,
-                    key=f"voto_{codigo}",
-                    horizontal=False
-                )
-            with col2:
-                comentario = st.text_area(
-                    f"Comentário (item {codigo})",
-                    value="",
-                    key=f"coment_{codigo}",
-                    height=90
-                )
+            grau_relevancia = st.radio(
+                "Grau de relevância (1 = nada relevante; 5 = muito relevante).",
+                options=[1, 2, 3, 4, 5],
+                horizontal=True,
+                key=f"grau_relevancia_{codigo}"
+            )
 
-            # regra: se voto != Manter, comentário obrigatório
-            if voto != "Manter" and not comentario.strip():
-                st.warning("Comentário obrigatório quando o voto for diferente de Manter.")
+            aplicabilidade_nacional = st.radio(
+                "Aplicabilidade nacional (Sim / Não), considerando a realidade nacional da pesca artesanal.",
+                options=["Sim", "Não"],
+                horizontal=True,
+                key=f"aplicabilidade_nacional_{codigo}"
+            )
+
+            aceitacao_item = st.radio(
+                "Aceitação do item (Sim / Não).",
+                options=["Sim", "Não"],
+                horizontal=True,
+                key=f"aceitacao_item_{codigo}"
+            )
+
+            comentarios_sugestoes = st.text_area(
+                "Campo aberto para comentários e sugestões (ajustes, exclusão ou inclusão de itens).",
+                value="",
+                key=f"comentarios_sugestoes_{codigo}",
+                height=110
+            )
+
+            # Regra recomendada: comentário obrigatório quando há discordância
+            # (Aceitação = Não) ou (Aplicabilidade = Não) ou (Relevância baixa 1–2).
+            if (aceitacao_item == "Não" or aplicabilidade_nacional == "Não" or grau_relevancia in [1, 2]) and not comentarios_sugestoes.strip():
                 problemas.append(codigo)
+                st.warning("Comentário obrigatório quando Aceitação = Não, Aplicabilidade = Não, ou Relevância = 1–2.")
 
         respostas.append({
             "secao": secao,
@@ -180,8 +190,10 @@ Itens que atingirem o consenso na primeira rodada serão considerados validados 
             "tematica": tematica,
             "pergunta": pergunta,
             "respostas": resp_txt,
-            "voto": voto,
-            "comentario": comentario.strip(),
+            "grau_relevancia": int(grau_relevancia),
+            "aplicabilidade_nacional": aplicabilidade_nacional,
+            "aceitacao_item": aceitacao_item,
+            "comentarios_sugestoes": comentarios_sugestoes.strip(),
         })
 
         st.divider()
@@ -195,9 +207,8 @@ Itens que atingirem o consenso na primeira rodada serão considerados validados 
             st.error("Preencha Nome e E-mail para enviar.")
             st.stop()
         if problemas:
-            # remove duplicados mantendo ordem
             problemas_unicos = list(dict.fromkeys(problemas))
-            st.error(f"Há itens com voto diferente de Manter sem comentário: {', '.join(problemas_unicos)}")
+            st.error(f"Há itens que exigem comentário e estão sem preenchimento: {', '.join(problemas_unicos)}")
             st.stop()
 
         registro = {
