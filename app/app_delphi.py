@@ -3,6 +3,10 @@ import re
 from datetime import datetime
 import pandas as pd
 import streamlit as st
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
 
 BASE_DIR = "base"
 OUTPUT_DIR = "outputs"
@@ -57,6 +61,50 @@ def salvar_respostas(registro: dict, respostas: list[dict]) -> str:
 
     df.to_csv(out_path, index=False, encoding="utf-8")
     return out_path
+
+PRIVATE_REPO = "Leo4US/delphi-validacao-respostas"
+PRIVATE_BRANCH = "main"
+
+def backup_para_repo_privado(csv_path: str, bloco_id: str) -> str:
+    token = os.getenv("GITHUB_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("GITHUB_TOKEN não encontrado no ambiente.")
+
+    git_user_email = os.getenv("GIT_USER_EMAIL", "").strip() or "noreply@example.com"
+    git_user_name = os.getenv("GIT_USER_NAME", "").strip() or "delphi-bot"
+
+    dest_rel = f"respostas/{bloco_id}/{os.path.basename(csv_path)}"
+
+    with tempfile.TemporaryDirectory() as td:
+        repo_dir = Path(td) / "repo_privado"
+        repo_url = f"https://x-access-token:{token}@github.com/{PRIVATE_REPO}.git"
+
+        subprocess.run(
+            ["git", "clone", "--depth", "1", "--branch", PRIVATE_BRANCH, repo_url, str(repo_dir)],
+            check=True,
+            text=True,
+        )
+
+        (repo_dir / f"respostas/{bloco_id}").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(csv_path, repo_dir / dest_rel)
+
+        subprocess.run(["git", "-C", str(repo_dir), "add", dest_rel], check=True)
+
+        msg = f"Backup {bloco_id}: {os.path.basename(csv_path)}"
+        subprocess.run(
+            [
+                "git", "-C", str(repo_dir),
+                "-c", f"user.name={git_user_name}",
+                "-c", f"user.email={git_user_email}",
+                "commit", "-m", msg
+            ],
+            check=False,
+            text=True,
+        )
+
+        subprocess.run(["git", "-C", str(repo_dir), "push", "origin", PRIVATE_BRANCH], check=True, text=True)
+
+    return dest_rel
 
 def main():
     st.set_page_config(page_title="Validação Delphi", layout="wide")
@@ -149,10 +197,14 @@ def main():
             "comentarios_sugestoes": comentarios_sugestoes.strip(),
         })
 
+    st.divider()
+    st.subheader("Enviar respostas")
+
     if st.button("Salvar submissão"):
         if not consent or not nome or not email:
             st.error("Identificação e consentimento são obrigatórios.")
             st.stop()
+
         if problemas:
             st.error(f"Itens sem comentário obrigatório: {', '.join(sorted(set(problemas)))}")
             st.stop()
@@ -166,8 +218,14 @@ def main():
             "timestamp": datetime.now().isoformat(timespec="seconds"),
         }
 
-        path = salvar_respostas(registro, respostas)
-        st.success(f"Submissão salva: {path}")
+        out_path = salvar_respostas(registro, respostas)
+
+        try:
+            _dest = backup_para_repo_privado(out_path, bloco_id)
+            st.success("Submissão salva e backup registrado.")
+        except Exception as e:
+            st.warning("Submissão salva localmente, mas o backup no repo privado falhou.")
+            st.text(str(e))
 
 if __name__ == "__main__":
     main()
