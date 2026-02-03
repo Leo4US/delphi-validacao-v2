@@ -144,8 +144,10 @@ def main():
     if "delphi_ok" not in st.session_state:
         st.session_state["delphi_ok"] = False
 
-    st.title("Validação Questionário [Rodada Delphi]")
-    st.write("Protótipo para teste de layout, fluxo de avaliação e armazenamento das respostas.")
+    st.title("Validação do Questionário [1º Rodada Delphi EQN + Especialistas Externos]")
+    st.write("Projeto de Pesquisa Trabalho Saudável e Seguro na Pesca Artesanal")
+    st.write("Protótipo para fluxo de avaliação e armazenamento das respostas.")
+    st.write("CAAE: 94837225.1.0000.5450; N. Parecer: 8.137.001")
 
     # =========================
     # Etapa 0) Instruções + Concordância (UMA SÓ)
@@ -199,7 +201,7 @@ def main():
         email = st.text_input("E-mail", key="email")
         cpf = st.text_input("CPF (opcional)", key="cpf")
         consent = st.checkbox(
-            "Li e concordo com o uso dos dados exclusivamente para reforço metodológico interno.",
+            "Li e concordo com o uso dos dados exclusivamente uso metodológico.",
             key="consent"
         )
 
