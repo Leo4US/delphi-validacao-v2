@@ -144,10 +144,11 @@ def main():
     if "delphi_ok" not in st.session_state:
         st.session_state["delphi_ok"] = False
 
-    st.title("Validação do Questionário [1º Rodada Delphi EQN + Especialistas Externos]")
+    st.title("Validação do Questionário")
+    st.title("[1º Rodada Delphi EQN + Especialistas Externos]")
     st.write("Projeto de Pesquisa Trabalho Saudável e Seguro na Pesca Artesanal")
     st.write("Protótipo para fluxo de avaliação e armazenamento das respostas.")
-    st.write("CAAE: 94837225.1.0000.5450; N. Parecer: 8.137.001")
+    st.write("Infos Plataforma Brasil: 94837225.1.0000.5450 (CAAE) e 8.137.001 (Parecer)")
 
     # =========================
     # Etapa 0) Instruções + Concordância (UMA SÓ)
