@@ -137,16 +137,25 @@ def backup_para_repo_privado(csv_path: str, bloco_id: str) -> str:
 def main():
     st.set_page_config(page_title="Validação Delphi", layout="wide")
 
-    st.title("Validação Rodada Delphi (v.beta)")
-    st.write("Protótipo interno para teste de layout, fluxo de avaliação e armazenamento das respostas.")
+    # =========================
+    # Estado de sessão (para esconder instruções após leitura)
+    # =========================
+    if "instr_ok" not in st.session_state:
+        st.session_state["instr_ok"] = False
+
+    st.title("Validação Questionário [Rodada Delphi]")
+    st.write("Protótipo para teste de layout, fluxo de avaliação e armazenamento das respostas.")
 
     # =========================
-    # Etapa 0) Instruções Delphi (leitura obrigatória)
+    # Etapa 0) Instruções Delphi (somem após marcar)
     # =========================
-    with st.expander("Instruções do Método Delphi (leitura obrigatória)", expanded=True):
-        st.markdown(INSTRUCOES_DELPHI)
-
-    li_instrucoes = st.checkbox("Li e compreendi as instruções do Método Delphi.", key="li_instr")
+    if not st.session_state["instr_ok"]:
+        with st.expander("Instruções do Método Delphi (leitura obrigatória)", expanded=True):
+            st.markdown(INSTRUCOES_DELPHI)
+            st.checkbox(
+                "Li e compreendi as instruções do Método Delphi.",
+                key="instr_ok"
+            )
 
     # =========================
     # Etapa 1) Seleção de bloco
@@ -272,9 +281,8 @@ def main():
     st.divider()
     st.subheader("Enviar respostas")
 
-    # >>>> BOTÃO NO NÍVEL CORRETO (direto dentro de main) <<<<
     if st.button("Salvar submissão"):
-        if not li_instrucoes:
+        if not st.session_state.get("instr_ok", False):
             st.error("Você precisa confirmar a leitura das instruções do Método Delphi para enviar.")
             st.stop()
 
