@@ -139,8 +139,7 @@ def main():
 
     # =========================
     # Estado de sessão
-    # - delphi_ok: valida que leu/concordou (uma vez por sessão)
-    # - prefills_ok: trava/preenche identificação (para não ficar editando sem querer)
+    # delphi_ok é o "flag definitivo" (não depende do widget existir)
     # =========================
     if "delphi_ok" not in st.session_state:
         st.session_state["delphi_ok"] = False
@@ -150,16 +149,23 @@ def main():
 
     # =========================
     # Etapa 0) Instruções + Concordância (UMA SÓ)
-    # - Aparece até marcar
-    # - Depois some e libera o resto
+    # Checkbox só ACIONA o flag delphi_ok e some
     # =========================
     if not st.session_state["delphi_ok"]:
-        with st.expander("Instruções e concordância (leitura obrigatória)", expanded=True):
+        instr_box = st.empty()  # placeholder para podermos "sumir" com a seção
+
+        with instr_box.expander("Instruções e concordância (leitura obrigatória)", expanded=True):
             st.markdown(INSTRUCOES_DELPHI)
-            st.checkbox(
+
+            concordou = st.checkbox(
                 "Li, compreendi e concordo com as instruções do Método Delphi.",
-                key="delphi_ok"
+                key="delphi_ok_checkbox"
             )
+
+            if concordou:
+                st.session_state["delphi_ok"] = True
+                instr_box.empty()
+                st.rerun()
 
         st.warning("Para acessar o questionário, é necessário ler e concordar com as instruções acima.")
         st.stop()
@@ -186,8 +192,7 @@ def main():
 
     # =========================
     # Etapa 2) Identificação + consentimento
-    # - Campos persistem na sessão (st.session_state)
-    # - Se trocar de bloco, mantém os dados (auto-preenchido)
+    # (st.session_state já faz o auto-preenchimento entre blocos)
     # =========================
     with st.expander("Identificação", expanded=True):
         nome = st.text_input("Nome", key="nome")
@@ -198,7 +203,10 @@ def main():
             key="consent"
         )
 
-    st.info("Instruções validadas. Você pode preencher este bloco e, se necessário, trocar para outro bloco sem reler as instruções.", icon="ℹ️")
+    st.info(
+        "Instruções validadas. Você pode preencher este bloco e, se necessário, trocar para outro bloco sem reler as instruções.",
+        icon="ℹ️"
+    )
 
     # =========================
     # Etapa 3) Loop de itens
