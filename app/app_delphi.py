@@ -137,15 +137,20 @@ def backup_para_repo_privado(csv_path: str, bloco_id: str) -> str:
 def main():
     st.set_page_config(page_title="Validação Delphi", layout="wide")
 
-    st.title("Validação Delphi (fase piloto)")
+    st.title("Validação Rodada Delphi (v.beta)")
     st.write("Protótipo interno para teste de layout, fluxo de avaliação e armazenamento das respostas.")
 
-        # Etapa 0) Instruções Delphi (obrigatório)
+    # =========================
+    # Etapa 0) Instruções Delphi (leitura obrigatória)
+    # =========================
     with st.expander("Instruções do Método Delphi (leitura obrigatória)", expanded=True):
         st.markdown(INSTRUCOES_DELPHI)
 
-    li_instrucoes = st.checkbox("Li e compreendi as instruções do Método Delphi.")
+    li_instrucoes = st.checkbox("Li e compreendi as instruções do Método Delphi.", key="li_instr")
 
+    # =========================
+    # Etapa 1) Seleção de bloco
+    # =========================
     blocos = listar_blocos()
     if not blocos:
         st.error("Nenhum arquivo encontrado em base/ no padrão blocoX_itens.csv.")
@@ -154,16 +159,31 @@ def main():
     bloco_arquivo = st.sidebar.selectbox("Escolha o bloco", blocos, index=0)
     caminho_csv = os.path.join(BASE_DIR, bloco_arquivo)
 
-    itens = carregar_itens(caminho_csv)
+    try:
+        itens = carregar_itens(caminho_csv)
+    except Exception as e:
+        st.error("Erro ao carregar o CSV do bloco.")
+        st.text(str(e))
+        st.stop()
+
     bloco_id = bloco_arquivo.replace("_itens.csv", "")
 
+    # =========================
+    # Etapa 2) Identificação + consentimento
+    # =========================
     with st.expander("Identificação", expanded=True):
-        nome = st.text_input("Nome")
-        email = st.text_input("E-mail")
-        cpf = st.text_input("CPF (opcional)")
-        consent = st.checkbox("Li e concordo com o uso dos dados exclusivamente para reforço metodológico interno.")
+        nome = st.text_input("Nome", key="nome")
+        email = st.text_input("E-mail", key="email")
+        cpf = st.text_input("CPF (opcional)", key="cpf")
+        consent = st.checkbox(
+            "Li e concordo com o uso dos dados exclusivamente para reforço metodológico interno.",
+            key="consent"
+        )
 
-    with st.expander("Instruções (Método Delphi)", expanded=True):
+    # =========================
+    # Etapa 3) Concordância (Delphi)
+    # =========================
+    with st.expander("Concordância (Método Delphi)", expanded=True):
         st.markdown(INSTRUCOES_DELPHI)
         concorda_instr = st.checkbox(
             "Li e compreendi as instruções acima e concordo em participar desta rodada.",
@@ -177,6 +197,9 @@ def main():
 
     st.info("Instruções claras sobre os critérios de avaliação e prazos de resposta.", icon="ℹ️")
 
+    # =========================
+    # Etapa 4) Loop de itens
+    # =========================
     respostas = []
     problemas = []
 
@@ -243,23 +266,24 @@ def main():
             "comentarios_sugestoes": comentarios_sugestoes.strip(),
         })
 
+    # =========================
+    # Etapa 5) Envio
+    # =========================
     st.divider()
     st.subheader("Enviar respostas")
 
-        if st.button("Salvar submissão"):
-
+    # >>>> BOTÃO NO NÍVEL CORRETO (direto dentro de main) <<<<
+    if st.button("Salvar submissão"):
         if not li_instrucoes:
             st.error("Você precisa confirmar a leitura das instruções do Método Delphi para enviar.")
             st.stop()
 
-        if not consent or not nome or not email:
-            st.error("Identificação e consentimento são obrigatórios.")
+        if not consent or not nome.strip() or not email.strip():
+            st.error("Identificação (nome e e-mail) e consentimento são obrigatórios.")
             st.stop()
 
         if problemas:
-            st.error(
-                f"Itens sem comentário obrigatório: {', '.join(sorted(set(problemas)))}"
-            )
+            st.error(f"Itens sem comentário obrigatório: {', '.join(sorted(set(problemas)))}")
             st.stop()
 
         registro = {
@@ -267,6 +291,7 @@ def main():
             "nome": nome.strip(),
             "email": email.strip(),
             "cpf": cpf.strip(),
+            "concordancia_instr_delphi": "sim",
             "consentimento": "sim",
             "timestamp": datetime.now().isoformat(timespec="seconds"),
         }
@@ -277,7 +302,8 @@ def main():
             _dest = backup_para_repo_privado(out_path, bloco_id)
             st.success("Submissão salva e backup registrado.")
         except Exception as e:
-            st.warning(
-                "Submissão salva localmente, mas o backup no repositório privado falhou."
-            )
+            st.warning("Submissão salva localmente, mas o backup no repositório privado falhou.")
             st.text(str(e))
+
+if __name__ == "__main__":
+    main()
