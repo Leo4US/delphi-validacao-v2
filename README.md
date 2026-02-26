@@ -1,4 +1,3 @@
-cat << 'EOF' > README.md
 # Sistema de Validação Delphi
 ## Projeto: Trabalho Saudável e Seguro na Pesca Artesanal
 
