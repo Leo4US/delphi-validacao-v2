@@ -1,61 +1,263 @@
-delphi-validacao
+cat << 'EOF' > README.md
+# Sistema de Validação Delphi
+## Projeto: Trabalho Saudável e Seguro na Pesca Artesanal
 
-Ferramenta experimental para validação interna de questionários por meio do método Delphi, com marcação estruturada de votos, espaço para comentários qualitativos e consolidação de resultados em formatos tabulares (CSV/XLSX).
+---
 
-Este repositório foi desenvolvido no âmbito do Programa Trabalho Saudável e Seguro na Pesca Artesanal (Fundacentro), com a finalidade de apoiar processos metodológicos internos de revisão, validação e reorganização de instrumentos de pesquisa.
+## 1. Finalidade do Sistema
 
-Objetivo
+Este sistema foi desenvolvido para operacionalizar a 2ª Rodada Delphi do processo de validação do instrumento de pesquisa do projeto:
 
-Oferecer um ambiente controlado para:
+Trabalho Saudável e Seguro na Pesca Artesanal
 
-validação interna de questionários extensos;
+O sistema permite:
 
-aplicação de rodadas Delphi entre pesquisadores e pesquisadoras;
+- Aplicação estruturada do questionário
+- Registro padronizado das avaliações
+- Validação automática de regras metodológicas
+- Armazenamento rastreável das submissões
+- Backup automático em repositório privado
 
-registro explícito de decisões metodológicas (Manter, Ajustar, Retirar, Coletivo);
+---
 
-coleta de comentários qualitativos associados a cada item;
+## 2. Fundamentação Metodológica
 
-consolidação posterior das respostas para análise, documentação e tomada de decisão.
+O sistema implementa o Método Delphi estruturado, com:
 
-Este repositório não se destina à coleta de dados junto aos participantes finais da pesquisa, sendo utilizado exclusivamente na etapa metodológica de validação do instrumento.
+- Avaliação item a item
+- Escala ordinal de relevância (1–5)
+- Julgamento binário de aplicabilidade nacional
+- Julgamento binário de aceitação do item
+- Comentário obrigatório quando houver rejeição ou restrição
 
-Método Delphi – categorias de decisão
+Regra metodológica implementada:
 
-Cada item do questionário é avaliado segundo as seguintes categorias padronizadas:
+Se Aplicabilidade = "Não" OU Aceitação = "Não" → Comentário obrigatório
 
-Manter
-A pergunta deve permanecer sem alterações.
+Essa regra garante:
 
-Ajustar
-Sugere-se revisão do enunciado e/ou das alternativas de resposta.
+- Qualidade qualitativa das discordâncias
+- Possibilidade de revisão fundamentada do instrumento
+- Transparência na análise de dissensos
 
-Retirar
-A pergunta deve ser excluída do instrumento.
+---
 
-Coletivo
-A pergunta não será aplicada ao respondente individual, devendo ser considerada para outro nível de coleta.
+## 3. Arquitetura do Sistema
 
-As decisões são registradas de forma estruturada, permitindo análise quantitativa e qualitativa das avaliações.
+### 1. Camada de Interface (UI)
 
-delphi-validacao/
-├── app/        # Aplicações de validação (Streamlit)
-├── base/       # Instrumento do questionário (Word + CSV por bloco/seção)
-├── docs/       # Documentação, escopo, governança e LGPD
-├── scripts/    # Consolidação de respostas e utilitários
-└── outputs/    # Saídas locais do app (não versionar respostas)
+Responsável por:
 
-Organização conceitual
+- Renderização via Streamlit
+- Controle de fluxo
+- Captura de dados
+- Controle de sessão
 
-base/
-Contém o instrumento de pesquisa que será avaliado.
-Inclui o arquivo original em Word (ponto de partida metodológico) e os arquivos CSV derivados, organizados por bloco/seção.
+### 2. Camada de Domínio / Dados
 
-app/
-Contém os aplicativos de validação Delphi, responsáveis por apresentar os itens, registrar votos e coletar comentários.
+Responsável por:
 
-outputs/
-Armazena temporariamente as respostas geradas durante a validação.
-Esses arquivos não devem ser versionados, pois representam dados de trabalho interno.
+- Validação estrutural dos blocos CSV
+- Normalização de colunas
+- Consolidação das respostas
+- Organização padronizada das colunas
+- Geração do artefato final (CSV)
 
-Nota! Submissões são salvas localmente em outputs/ e imediatamente ‘espelhadas’ no repo privado delphi-validacao-respostas (pasta respostas/blocoX/) via git clone/add/commit/push usando GITHUB_TOKEN.
+### 3. Camada de Infraestrutura
+
+Responsável por:
+
+- Logging técnico
+- Persistência local
+- Backup automatizado via Git
+- Controle de autenticação segura via token
+
+---
+
+## 4. Estrutura de Diretórios
+
+.
+├── base/
+│   ├── bloco1_itens.csv
+│   ├── bloco2_itens.csv
+│   └── ...
+│
+├── outputs/
+│   ├── delphi_bloco1_nome_timestamp.csv
+│   └── logs/
+│       └── app.log
+│
+├── app.py
+└── README.md
+
+---
+
+## 5. Estrutura do CSV de Blocos
+
+Colunas obrigatórias:
+
+- secao
+- codigo
+- tematica
+- pergunta
+
+Coluna opcional:
+
+- respostas
+
+Se a coluna "texto" existir e "pergunta" não existir, o sistema converte automaticamente.
+
+---
+
+## 6. Estrutura do CSV de Saída
+
+Cada submissão gera um arquivo CSV com:
+
+### Metadados
+
+- bloco
+- nome
+- email
+- cpf
+- concordancia_instr_delphi
+- consentimento
+- timestamp
+
+### Dados por item
+
+- secao
+- codigo
+- tematica
+- pergunta
+- respostas
+- grau_relevancia
+- aplicabilidade_nacional
+- aceitacao_item
+- comentarios_sugestoes
+
+A ordenação das colunas é padronizada para facilitar:
+
+- Auditoria
+- Consolidação estatística posterior
+- Reprodutibilidade
+
+---
+
+## 7. Controle de Integridade Metodológica
+
+O sistema impede submissão quando:
+
+- Instruções Delphi não foram aceitas
+- Nome ou e-mail não preenchidos
+- Consentimento não marcado
+- Itens obrigatórios sem comentário
+
+Isso assegura conformidade metodológica da rodada.
+
+---
+
+## 8. Logging e Rastreabilidade
+
+O sistema registra:
+
+- Carregamento de bloco
+- Número de itens
+- Tentativas de submissão
+- Bloqueios por validação
+- Caminho do arquivo salvo
+- Status do backup Git
+
+Logs são armazenados em:
+
+outputs/logs/app.log
+
+Formato:
+
+YYYY-MM-DD HH:MM:SS | LEVEL | mensagem
+
+Isso permite:
+
+- Auditoria técnica
+- Reconstrução de eventos
+- Evidência de governança de dados
+
+---
+
+## 9. Backup Automatizado
+
+Após salvar localmente, o sistema:
+
+1. Clona repositório privado
+2. Copia arquivo
+3. Executa git add
+4. Executa git commit
+5. Executa git push
+
+Requisitos:
+
+- GITHUB_TOKEN em secrets ou variável de ambiente
+- git instalado no ambiente
+
+Finalidade:
+
+- Redundância
+- Preservação institucional
+- Segurança contra perda local
+
+---
+
+## 10. Segurança e Privacidade
+
+- Token GitHub não é exposto no código
+- Uso de st.secrets ou variável de ambiente
+- CPF é opcional
+- Dados não são publicados automaticamente
+- Repositório privado para armazenamento seguro
+
+---
+
+## 11. Conformidade Ética
+
+O sistema:
+
+- Registra concordância metodológica
+- Registra consentimento
+- Permite rastreabilidade temporal
+- Estrutura dados para análise posterior anonimizada
+
+Informações institucionais incluídas:
+
+- CAAE
+- Número do parecer
+
+---
+
+## 12. Possibilidades Futuras
+
+O sistema foi estruturado para permitir:
+
+- Múltiplas rodadas Delphi
+- Consolidação estatística automática
+- Geração de relatórios
+- Exportação para Power BI
+- Integração com pipeline quantitativo
+- Controle de versão de instrumento
+
+---
+
+## 13. Potencial de Publicação
+
+Este sistema pode fundamentar:
+
+- Artigo metodológico sobre validação Delphi digital
+- Relato técnico de governança de dados em pesquisa participativa
+- Estudo sobre integração entre extensão e infraestrutura digital
+- Descrição de tecnologia social aplicada à pesquisa
+
+---
+
+## 14. Autoria Técnica
+
+Sistema desenvolvido como infraestrutura metodológica para validação estruturada do instrumento de pesquisa no âmbito do Programa Trabalho Saudável e Seguro na Pesca Artesanal.
+
+EOF
