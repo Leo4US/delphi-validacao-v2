@@ -6,10 +6,8 @@ from pathlib import Path
 import tempfile
 import shutil
 import subprocess
-
 import pandas as pd
 import streamlit as st
-
 
 # ============================================================
 # CONFIGURAÇÃO (parâmetros fixos do app)
@@ -22,7 +20,7 @@ PRIVATE_REPO = "Leo4US/delphi-validacao-respostas"
 PRIVATE_BRANCH = "main"
 
 INSTRUCOES_DELPHI = """
-### Instruções – Rodada Delphi
+### Instruções da Rodada Delphi [versão 2]
 
 1) Leia o item do questionário (pergunta e respostas).
 2) Avalie o item conforme os critérios:
@@ -35,7 +33,6 @@ INSTRUCOES_DELPHI = """
 
 Ao prosseguir, você confirma que leu e compreendeu estas instruções.
 """
-
 
 # ============================================================
 # CAMADA: INFRA / LOGGING
@@ -87,7 +84,6 @@ def setup_logging(log_dir: str = OUTPUT_DIR) -> logging.Logger:
     logger.info("Logging inicializado")
     return logger
 
-
 # ============================================================
 # CAMADA: DOMÍNIO / DADOS (entrada, validação, persistência)
 # ============================================================
@@ -112,7 +108,6 @@ def listar_blocos(base_dir: str = BASE_DIR) -> list[str]:
         [f for f in os.listdir(base_dir) if re.match(r"bloco\d+_itens\.csv$", f)]
     )
     return arquivos
-
 
 def carregar_itens(caminho_csv: str) -> pd.DataFrame:
     """
@@ -151,7 +146,6 @@ def carregar_itens(caminho_csv: str) -> pd.DataFrame:
         df[c] = df[c].astype(str).str.strip()
 
     return df
-
 
 def salvar_respostas(registro: dict, respostas: list[dict], output_dir: str = OUTPUT_DIR) -> str:
     """
